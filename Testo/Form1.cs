@@ -37,7 +37,7 @@ namespace Testo
         }
         public class Gizmo_api_user_userId_balanse_full
         {
-            public List<Gizmo_api_user_userId_balanse> result { get; set; }
+            public Gizmo_api_user_userId_balanse result { get; set; }
             public int httpStatusCode { get; set; }
         }
 
@@ -132,19 +132,19 @@ namespace Testo
         public class Gizmo_api_user_userId_balanse
         {
             public int userId { get; set; }
-            public int deposits { get; set; }
-            public int points { get; set; }
-            public int onInvoices { get; set; }
-            public int onInvoicedUsage { get; set; }
-            public int onUninvoicedUsage { get; set; }
-            public int timeProduct { get; set; }
-            public int timeFixed { get; set; }
-            public int availableTime { get; set; }
-            public int availableCreditedTime { get; set; }
-            public int balance { get; set; }
-            public int timeProductBalance { get; set; }
-            public int usageBalance { get; set; }
-            public int totalOutstanding { get; set; }
+            public double deposits { get; set; }
+            public double points { get; set; }
+            public double onInvoices { get; set; }
+            public double onInvoicedUsage { get; set; }
+            public double onUninvoicedUsage { get; set; }
+            public double timeProduct { get; set; }
+            public double timeFixed { get; set; }
+            public double availableTime { get; set; }
+            public double availableCreditedTime { get; set; }
+            public double balance { get; set; }
+            public double timeProductBalance { get; set; }
+            public double usageBalance { get; set; }
+            public double totalOutstanding { get; set; }
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -164,6 +164,8 @@ namespace Testo
                 //Gizmo_api_host_full temp_api = JsonConvert.DeserializeObject<Gizmo_api_host_full>(all_json_text);
                 Gizmo_api_users_full temp_users = JsonConvert.DeserializeObject<Gizmo_api_users_full>(all_json_text);
                 //foreach (Gizmo_api_hosts host in temp_api.result)
+                
+
                 foreach(Gizmo_api_users user in temp_users.result)
                 {
                     if(user.userGroupId == 1 )
@@ -174,6 +176,51 @@ namespace Testo
             catch(Exception exc)
             {
                 MessageBox.Show(exc.Message, "nagovnokodil", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int[] hosts_time = new int[60];
+                WebRequest activesessions_info_request = WebRequest.Create("http://netstorage/api/usersessions/activeinfo");
+                activesessions_info_request.Credentials = new NetworkCredential("Earlies", "Vjzctcnhf1");
+                WebResponse activesessions_info_response = activesessions_info_request.GetResponse();
+                Stream activesessions_info_stream = activesessions_info_response.GetResponseStream();
+                StreamReader activesessions_info_stream_reader = new StreamReader(activesessions_info_stream);
+                string activesessions_info_json_text = activesessions_info_stream_reader.ReadToEnd();
+
+                Gizmo_api_usersessions_activeinfo_full temp_hosts_time = JsonConvert.DeserializeObject<Gizmo_api_usersessions_activeinfo_full>(activesessions_info_json_text);
+
+                foreach (Gizmo_api_usersessions_activeinfo temp_activesession_info in temp_hosts_time.result)
+                {
+
+                    WebRequest userId_balanse_request = WebRequest.Create("http://netstorage/api/users/" + temp_activesession_info.userId + "/balance");
+                    userId_balanse_request.Credentials = new NetworkCredential("Earlies", "Vjzctcnhf1");
+                    WebResponse userId_balanse_response = userId_balanse_request.GetResponse();
+                    Stream userId_balanse_stream = userId_balanse_response.GetResponseStream();
+                    StreamReader userId_balanse_stream_reader = new StreamReader(userId_balanse_stream);
+                    string userId_balanse_json_text = userId_balanse_stream_reader.ReadToEnd();
+
+                    Gizmo_api_user_userId_balanse_full temp_userId_balanse = JsonConvert.DeserializeObject<Gizmo_api_user_userId_balanse_full>(userId_balanse_json_text);
+
+                    hosts_time[temp_activesession_info.hostNumber + 1] = Convert.ToInt32(temp_userId_balanse.result.availableTime);
+                    userId_balanse_response.Close();
+                }
+                activesessions_info_response.Close();
+                for (int i = 0; i < 60; i++) 
+                {
+                    int temp_hour = hosts_time[i] / 3600;
+                    int temp_hour_in_min = temp_hour * 60;
+                    int temp_min = hosts_time[i] / 60 - temp_hour_in_min;
+                    textBox2.Text += "pc " + i + 1 + " : " + hosts_time[i] / 3600 + ":" + temp_min + "  ";
+                }
+                
+            }
+            catch(Exception host_time_exc)
+            {
+                MessageBox.Show(host_time_exc.Message, "nagovnokodil", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
             }
         }
     }
