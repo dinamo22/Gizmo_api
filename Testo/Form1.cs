@@ -14,7 +14,7 @@ namespace Testo
         {
             InitializeComponent();
         }
-
+        //разберись потом с string to datatime
         public class Gizmo_api_users_full
         {
             public List<Gizmo_api_users> result { get; set; }
@@ -40,6 +40,12 @@ namespace Testo
             public Gizmo_api_user_userId_balanse result { get; set; }
             public int httpStatusCode { get; set; }
         }
+        public class Gizmo_api_reports_overview_full
+        {
+            public Gizmo_api_reports_overview result { get; set; }
+            public int httpStatusCode { get; set; }
+        }
+
 
         public class Gizmo_api_products
         {
@@ -146,6 +152,53 @@ namespace Testo
             public double usageBalance { get; set; }
             public double totalOutstanding { get; set; }
         }
+        public class Gizmo_api_reports_overview
+        {
+            public List<Gizmo_api_operatorsStatistics> operatorsStatistics { get; set; }
+            public string averageMemberUsagePeriodMinutes { get; set; }
+            public string averageGuestUsagePeriodMinutes { get; set; }
+            public double averageUtilizationPercentage { get; set; }
+            public int uniqueMembersLogins { get; set; }
+            public int uniqueGuestsLogins { get; set; }
+            public Gizmo_api_memberCounters memberCounters { get; set; }
+            public double totalRevenue { get; set; }
+            public double averageRevenuePerMember { get; set; }
+            public double averageRevenuePerGuest { get; set; }
+            public List<Gizmo_api_revenuePerGroup> revenuePerGroup { get; set; }
+            public string name { get; set; }
+            public string dateFrom { get; set; }
+            public string dateTo { get; set; }
+            public string companyName { get; set; }
+            public string reportType { get; set; }
+        }
+
+
+        public class Gizmo_api_operatorsStatistics
+        {
+            public int operatorId { get; set; }
+            public string operatorName { get; set; }
+            public int minutesWorked { get; set; }
+            public string hoursWorked { get; set; }
+            public double minutesSold { get; set; }
+            public string hoursSold { get; set; }
+            public double productsSold { get; set; }
+            public double timeOffersSold { get; set; }
+            public double bundlesSold { get; set; }
+            public int voids { get; set; }
+            public double revenue { get; set; }
+        }
+        public class Gizmo_api_memberCounters
+        {
+            public int newMembers { get; set; }
+            public int totalMembers { get; set; }
+            public int bannedMembers { get; set; }
+        }
+        public class Gizmo_api_revenuePerGroup
+        {
+            public string name { get; set; }
+            public double value { get; set; }
+        }
+
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -164,9 +217,9 @@ namespace Testo
                 //Gizmo_api_host_full temp_api = JsonConvert.DeserializeObject<Gizmo_api_host_full>(all_json_text);
                 Gizmo_api_users_full temp_users = JsonConvert.DeserializeObject<Gizmo_api_users_full>(all_json_text);
                 //foreach (Gizmo_api_hosts host in temp_api.result)
-                
 
-                foreach(Gizmo_api_users user in temp_users.result)
+                textBox1.Text = "";
+                foreach (Gizmo_api_users user in temp_users.result)
                 {
                     if(user.userGroupId == 1 )
                     textBox1.Text += user.username + "  ";
@@ -177,6 +230,8 @@ namespace Testo
             {
                 MessageBox.Show(exc.Message, "nagovnokodil", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
             }
+            Form2 newForm = new Form2();
+            newForm.Show();
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -195,7 +250,7 @@ namespace Testo
 
                 foreach (Gizmo_api_usersessions_activeinfo temp_activesession_info in temp_hosts_time.result)
                 {
-
+                    textBox2.Text = "";
                     WebRequest userId_balanse_request = WebRequest.Create("http://netstorage/api/users/" + temp_activesession_info.userId + "/balance");
                     userId_balanse_request.Credentials = new NetworkCredential("Earlies", "Vjzctcnhf1");
                     WebResponse userId_balanse_response = userId_balanse_request.GetResponse();
@@ -205,22 +260,45 @@ namespace Testo
 
                     Gizmo_api_user_userId_balanse_full temp_userId_balanse = JsonConvert.DeserializeObject<Gizmo_api_user_userId_balanse_full>(userId_balanse_json_text);
 
-                    hosts_time[temp_activesession_info.hostNumber + 1] = Convert.ToInt32(temp_userId_balanse.result.availableTime);
+                    hosts_time[temp_activesession_info.hostNumber - 1] = Convert.ToInt32(temp_userId_balanse.result.availableTime);
                     userId_balanse_response.Close();
                 }
                 activesessions_info_response.Close();
                 for (int i = 0; i < 60; i++) 
                 {
-                    int temp_hour = hosts_time[i] / 3600;
-                    int temp_hour_in_min = temp_hour * 60;
-                    int temp_min = hosts_time[i] / 60 - temp_hour_in_min;
-                    textBox2.Text += "pc " + i + 1 + " : " + hosts_time[i] / 3600 + ":" + temp_min + "  ";
+                    textBox2.Text += "pc" + (i + 1) + " : " + (hosts_time[i] / 3600) + ":" + (hosts_time[i] % 3600) / 60 + "      ";
+                    if((i+1)%5 == 0)
+                    {
+                        textBox2.Text += Environment.NewLine;
+                    }
                 }
                 
             }
             catch(Exception host_time_exc)
             {
                 MessageBox.Show(host_time_exc.Message, "nagovnokodil", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                WebRequest reports_overview_request = WebRequest.Create("http://netstorage/api/reports/overview?DateFrom=2020-07-25T09%3A06&DateTo=2020-07-26T09%3A00");
+                reports_overview_request.Credentials = new NetworkCredential("Earlies", "Vjzctcnhf1");
+                WebResponse reports_overview_response = reports_overview_request.GetResponse();
+                Stream reports_overview_stream = reports_overview_response.GetResponseStream();
+                StreamReader reports_overview_streamreader = new StreamReader(reports_overview_stream);
+                string reports_overview_json_text = reports_overview_streamreader.ReadToEnd();
+
+                Gizmo_api_reports_overview_full temp_reports_overview = JsonConvert.DeserializeObject<Gizmo_api_reports_overview_full>(reports_overview_json_text);
+                //пока просто вывод залупы коня
+                textBox1.Text = "";
+                textBox1.Text += temp_reports_overview.result.operatorsStatistics[0].revenue;
+            }
+            catch(Exception reports_overview_exc)
+            {
+                MessageBox.Show(reports_overview_exc.Message, "nagovnokodil", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
             }
         }
     }
