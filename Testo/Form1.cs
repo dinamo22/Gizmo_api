@@ -45,6 +45,11 @@ namespace Testo
             public Gizmo_api_reports_overview result { get; set; }
             public int httpStatusCode { get; set; }
         }
+        public class Gizmo_api_hostcomputers_hostID_process_full
+        {
+            public List<Gizmo_api_hostcomputers_hostID_process> result { get; set; }
+            public int httpStatusCode { get; set; }
+        }
 
 
         public class Gizmo_api_products
@@ -145,8 +150,8 @@ namespace Testo
             public double onUninvoicedUsage { get; set; }
             public double timeProduct { get; set; }
             public double timeFixed { get; set; }
-            public double availableTime { get; set; }
-            public double availableCreditedTime { get; set; }
+            public object availableTime { get; set; }
+            public object availableCreditedTime { get; set; }
             public double balance { get; set; }
             public double timeProductBalance { get; set; }
             public double usageBalance { get; set; }
@@ -171,9 +176,26 @@ namespace Testo
             public string companyName { get; set; }
             public string reportType { get; set; }
         }
+        public class Gizmo_api_hostcomputers_hostID_process
+        {
+            public Gizmo_api_mainModule mainModule { get; set; }
+            public int id { get; set; }
+            public int parentID { get; set; }
+            public int sessionID { get; set; }
+            public string processName { get; set; }
+            public string processExeName { get; set; }
+            public string commandLine { get; set; }
+            public int basePriority { get; set; }
+            public string startTime { get; set; }
+            public string totalProcessorTime { get; set; }
+            public string userProcessorTime { get; set; }
+            public int processorCount { get; set; }
+            public long privateMemorySize { get; set; }
+            public string currentDirectorv { get; set; }
+        }
 
 
-        public class Gizmo_api_operatorsStatistics
+        public class Gizmo_api_operatorsStatistics //for Gizmo_api_reports_overview
         {
             public int operatorId { get; set; }
             public string operatorName { get; set; }
@@ -187,16 +209,28 @@ namespace Testo
             public int voids { get; set; }
             public double revenue { get; set; }
         }
-        public class Gizmo_api_memberCounters
+        public class Gizmo_api_memberCounters //for Gizmo_api_reports_overview
         {
             public int newMembers { get; set; }
             public int totalMembers { get; set; }
             public int bannedMembers { get; set; }
         }
-        public class Gizmo_api_revenuePerGroup
+        public class Gizmo_api_revenuePerGroup //for Gizmo_api_reports_overview
         {
             public string name { get; set; }
             public double value { get; set; }
+        }     
+        public class Gizmo_api_mainModule // for Gizmo_api_hostcomputers_hostID_process
+        {
+            public string fileName { get; set; }
+            public string moduleName { get; set; }
+            public string companyName { get; set; }
+            public string deskription { get; set; }
+            public string fileVersion { get; set; }
+            public long entryPointAddress { get; set; }
+            public long moduleMemorySize { get; set; }
+            public long baseAddress { get; set; }
+            public string iconData { get; set; }
         }
 
 
@@ -259,8 +293,17 @@ namespace Testo
                     string userId_balanse_json_text = userId_balanse_stream_reader.ReadToEnd();
 
                     Gizmo_api_user_userId_balanse_full temp_userId_balanse = JsonConvert.DeserializeObject<Gizmo_api_user_userId_balanse_full>(userId_balanse_json_text);
-
-                    hosts_time[temp_activesession_info.hostNumber - 1] = Convert.ToInt32(temp_userId_balanse.result.availableTime);
+                    if (temp_activesession_info.hostNumber < 61)
+                    {
+                        if(temp_activesession_info.hostNumber == 0)
+                        {
+                            hosts_time[temp_activesession_info.hostNumber - 1] = -1;
+                        }
+                        else
+                        {
+                            hosts_time[temp_activesession_info.hostNumber - 1] = Convert.ToInt32(temp_userId_balanse.result.availableTime);
+                        }                       
+                    }
                     userId_balanse_response.Close();
                 }
                 activesessions_info_response.Close();
@@ -279,7 +322,7 @@ namespace Testo
                 MessageBox.Show(host_time_exc.Message, "nagovnokodil", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
             }
         }
-
+       
         private void button3_Click(object sender, EventArgs e)
         {
             try
@@ -300,6 +343,41 @@ namespace Testo
             {
                 MessageBox.Show(reports_overview_exc.Message, "nagovnokodil", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
             }
+        }
+
+        public string ConvertImage(System.Drawing.Bitmap tempBitmap)
+        {
+            MemoryStream objStream = new MemoryStream();
+            tempBitmap.Save(objStream,System.Drawing.Imaging.ImageFormat.Jpeg);
+            return Convert.ToBase64String(objStream.ToArray());
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int hostId = 15;
+
+                WebRequest hostID_process_request = WebRequest.Create("http://netstorage/api/hostcomputers/" + hostId + "/process");
+                hostID_process_request.Credentials = new NetworkCredential("Earlies", "Vjzctcnhf1");
+                WebResponse hostID_process_response = hostID_process_request.GetResponse();
+                Stream hostID_process_stream = hostID_process_response.GetResponseStream();
+                StreamReader hostID_process_streamreader = new StreamReader(hostID_process_stream);
+                var hostID_process_full_json_text = hostID_process_streamreader.ReadToEnd();
+
+                Gizmo_api_hostcomputers_hostID_process_full hostID_process_temp = JsonConvert.DeserializeObject<Gizmo_api_hostcomputers_hostID_process_full>(hostID_process_full_json_text);
+                textBox1.Text = "";
+                foreach (Gizmo_api_hostcomputers_hostID_process process_temp in hostID_process_temp.result)
+                {
+                    textBox1.Text += process_temp.processExeName + "  ";
+                }
+            }
+            catch(Exception hostId_process_exc)
+            {
+                MessageBox.Show(hostId_process_exc.Message, "nagovnokodil", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+            }
+            
+
         }
     }
 }
