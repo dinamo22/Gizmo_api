@@ -77,7 +77,11 @@ namespace Testo
         public List<Gizmo_api_hostcomputers_hostID_process> result { get; set; }
         public int httpStatusCode { get; set; }
     }
-
+    public class Gizmo_api_hostcomputers_full
+    {
+        public List<Gizmo_api_hostcomputers> result { get; set; }
+        public int httpStatusCode { get; set; }
+    }
 
     public class Gizmo_api_products
     {
@@ -219,6 +223,22 @@ namespace Testo
         public int processorCount { get; set; }
         public long privateMemorySize { get; set; }
         public string currentDirectorv { get; set; }
+    }
+    public class Gizmo_api_hostcomputers
+    {
+        public string hostname { get; set; }
+        public string macAddress { get; set; }
+        public int number { get; set; }
+        public string name { get; set; }
+        public int hostGroupId { get; set; }
+        public int state { get; set; }
+        public object iconId { get; set; }
+        public bool isDeleted { get; set; }
+        public int modifiedById { get; set; }
+        public string modifiedTime { get; set; }
+        public object createdById { get; set; }
+        public string createdTime { get; set; }
+        public int id { get; set; }
     }
 
 
